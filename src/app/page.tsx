@@ -27,7 +27,7 @@ export default function Home() {
   useEffect(() => {
     try {
       const savedActivities = localStorage.getItem(
-        'pixel-time-tracker-activities'
+        'chibi-time-tracker-activities'
       );
       if (savedActivities) {
         setActivities(JSON.parse(savedActivities));
@@ -42,7 +42,7 @@ export default function Home() {
     if (isMounted) {
       try {
         localStorage.setItem(
-          'pixel-time-tracker-activities',
+          'chibi-time-tracker-activities',
           JSON.stringify(activities)
         );
       } catch (error) {

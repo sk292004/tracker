@@ -7,11 +7,55 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CategoryIcon } from './category-icon';
 import { EditIcon, DeleteIcon } from './icons';
+import { parse, differenceInMinutes } from 'date-fns';
 
 type ActivityListProps = {
   activities: Activity[];
   onEdit: (activity: Activity) => void;
   onDelete: (id: string) => void;
+};
+
+const TimeProgress = ({ startTime, endTime }: { startTime: string; endTime: string }) => {
+  const start = parse(startTime, 'HH:mm', new Date());
+  const end = parse(endTime, 'HH:mm', new Date());
+  let duration = differenceInMinutes(end, start);
+  if (duration < 0) duration = 0;
+
+  const circumference = 28 * 2 * Math.PI;
+  // Use duration as a representation, capping at 60 for visualization
+  const strokeDashoffset = circumference - (Math.min(duration, 60) / 60) * circumference;
+
+  return (
+    <div className="relative h-16 w-16 flex items-center justify-center">
+      <svg className="absolute h-full w-full transform -rotate-90">
+        <circle
+          className="text-muted"
+          strokeWidth="4"
+          stroke="currentColor"
+          fill="transparent"
+          r="28"
+          cx="32"
+          cy="32"
+        />
+        <circle
+          className="text-primary"
+          strokeWidth="4"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          stroke="currentColor"
+          fill="transparent"
+          r="28"
+          cx="32"
+          cy="32"
+        />
+      </svg>
+      <div className="flex flex-col items-center justify-center font-mono text-xs text-muted-foreground">
+        <span>{startTime}</span>
+        <span>{endTime}</span>
+      </div>
+    </div>
+  );
 };
 
 export function ActivityList({
@@ -44,11 +88,7 @@ export function ActivityList({
           {activities.map((activity, index) => (
             <li key={activity.id}>
               <div className="flex items-center space-x-4 p-2 rounded-md transition-colors hover:bg-accent">
-                <div className="flex flex-col items-center justify-center font-mono text-sm text-muted-foreground w-16">
-                  <span>{activity.startTime}</span>
-                  <span>-</span>
-                  <span>{activity.endTime}</span>
-                </div>
+                <TimeProgress startTime={activity.startTime} endTime={activity.endTime} />
                 <CategoryIcon
                   category={activity.category}
                   className="h-8 w-8 text-foreground"
