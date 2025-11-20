@@ -28,13 +28,13 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh \'\'\'
+                    sh '''
                         ${SCANNER_HOME}/bin/sonar-scanner \
                         -Dsonar.projectKey=tracker \
                         -Dsonar.projectName=tracker \
                         -Dsonar.sources=. \
                         -Dsonar.exclusions=node_modules/**,build/**,.next/**
-                    \'\'\'
+                    '''
                 }
             }
         }
@@ -78,10 +78,10 @@ pipeline {
             steps {
                 script {
                     // Stop and remove old container if exists
-                    sh \'\'\'
+                    sh '''
                         docker stop tracker-app || true
                         docker rm tracker-app || true
-                    \'\'\'
+                    '''
                     
                     // Run new container
                     sh "docker run -d --name tracker-app -p 3000:3000 ${DOCKER_IMAGE}:latest"
