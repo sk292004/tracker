@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CategoryIcon } from './category-icon';
-import { EditIcon, DeleteIcon } from './icons';
+import { EditIcon, DeleteIcon, CheckCircle2 } from 'lucide-react';
 import { parse, differenceInMinutes } from 'date-fns';
 
 type ActivityListProps = {
@@ -50,9 +50,9 @@ const TimeProgress = ({ startTime, endTime }: { startTime: string; endTime: stri
           cy="32"
         />
       </svg>
-      <div className="flex flex-col items-center justify-center font-mono text-xs text-muted-foreground">
-        <span>{startTime}</span>
-        <span>{endTime}</span>
+      <div className="text-center font-mono text-sm font-bold text-foreground">
+        {duration}
+        <span className="block text-xs font-normal text-muted-foreground">min</span>
       </div>
     </div>
   );
@@ -85,43 +85,53 @@ export function ActivityList({
       </CardHeader>
       <CardContent>
         <ul className="space-y-4">
-          {activities.map((activity, index) => (
-            <li key={activity.id}>
-              <div className="flex items-center space-x-4 p-2 rounded-md transition-colors hover:bg-accent">
-                <TimeProgress startTime={activity.startTime} endTime={activity.endTime} />
-                <CategoryIcon
-                  category={activity.category}
-                  className="h-8 w-8 text-foreground"
-                />
-                <div className="flex-1">
-                  <p className="font-semibold">{activity.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {CATEGORIES[activity.category].label}
-                  </p>
+          {activities.map((activity, index) => {
+            const start = parse(activity.startTime, 'HH:mm', new Date());
+            const end = parse(activity.endTime, 'HH:mm', new Date());
+            const actualDuration = differenceInMinutes(end, start);
+            const completedEarly = activity.estimatedDuration && actualDuration < activity.estimatedDuration;
+
+            return (
+              <li key={activity.id}>
+                <div className="flex items-center space-x-4 p-2 rounded-md transition-colors hover:bg-accent">
+                  <TimeProgress startTime={activity.startTime} endTime={activity.endTime} />
+                  <CategoryIcon
+                    category={activity.category}
+                    className="h-8 w-8 text-foreground"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                       <p className="font-semibold">{activity.name}</p>
+                       {completedEarly && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {CATEGORIES[activity.category].label}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(activity)}
+                      aria-label={`Edit ${activity.name}`}
+                    >
+                      <EditIcon className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(activity.id)}
+                      aria-label={`Delete ${activity.name}`}
+                      className="hover:bg-destructive/20 hover:text-destructive"
+                    >
+                      <DeleteIcon className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(activity)}
-                    aria-label={`Edit ${activity.name}`}
-                  >
-                    <EditIcon className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(activity.id)}
-                    aria-label={`Delete ${activity.name}`}
-                    className="hover:bg-destructive/20 hover:text-destructive"
-                  >
-                    <DeleteIcon className="h-5 w-5" />
-                  </Button>
-                </div>
-              </div>
-              {index < activities.length - 1 && <Separator className="mt-4" />}
-            </li>
-          ))}
+                {index < activities.length - 1 && <Separator className="mt-4" />}
+              </li>
+            );
+          })}
         </ul>
       </CardContent>
     </Card>

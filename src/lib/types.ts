@@ -15,6 +15,7 @@ export type Activity = {
   name: string;
   startTime: string; // "HH:mm"
   endTime:string; // "HH:mm"
+  estimatedDuration?: number; // in minutes
   category: Category;
   date: string; // "YYYY-MM-DD"
 };

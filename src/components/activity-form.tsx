@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -40,6 +40,7 @@ const formSchema = z
     endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
       message: 'Invalid time format.',
     }),
+    estimatedDuration: z.coerce.number().int().positive().optional(),
     category: z.enum(Object.keys(CATEGORIES) as [Category, ...Category[]]),
   })
   .refine((data) => data.endTime > data.startTime, {
@@ -72,12 +73,14 @@ export function ActivityForm({
           name: activityToEdit.name,
           startTime: activityToEdit.startTime,
           endTime: activityToEdit.endTime,
+          estimatedDuration: activityToEdit.estimatedDuration,
           category: activityToEdit.category,
         }
       : {
           name: '',
           startTime: '',
           endTime: '',
+          estimatedDuration: undefined,
           category: 'work',
         },
   });
@@ -105,7 +108,7 @@ export function ActivityForm({
       onUpdateActivity({ ...values, id: activityToEdit.id, date: activityToEdit.date });
     } else if (onAddActivity) {
       onAddActivity(values);
-      form.reset({ name: '', startTime: '', endTime: '', category: 'work' });
+      form.reset({ name: '', startTime: '', endTime: '', estimatedDuration: undefined, category: 'work' });
     }
   }
 
@@ -156,6 +159,20 @@ export function ActivityForm({
                 )}
               />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="estimatedDuration"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estimated Duration (minutes)</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="e.g., 60" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
