@@ -1,11 +1,16 @@
 stages:
   - build
+  - test      # New stage for SonarQube
   - deploy
+  - security  # New stage for OWASP ZAP
 
 variables:
   IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  # Replace these with the keys SonarCloud gave you in Part 1
+  SONAR_PROJECT_KEY: "your_project_key_from_sonarcloud"
+  SONAR_ORG_KEY: "your_org_key_from_sonarcloud"
 
-# Build the Docker image and push it to GitLab's built-in registry
+# 1. Build App
 build_image:
   stage: build
   image: docker:20.10.16
@@ -16,7 +21,19 @@ build_image:
     - docker build -t $IMAGE_TAG .
     - docker push $IMAGE_TAG
 
-# SSH into the EC2, pull the image, and run it
+# 2. Code Quality Scan (SonarQube)
+sonar_scan:
+  stage: test
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    GIT_DEPTH: "0"
+  script:
+    - sonar-scanner -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.organization=$SONAR_ORG_KEY -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+
+# 3. Deploy to EC2
 deploy_to_ec2:
   stage: deploy
   image: alpine:latest
@@ -34,3 +51,15 @@ deploy_to_ec2:
         docker stop tracker-app || true &&
         docker rm tracker-app || true &&
         docker run -d -p 3000:3000 --name tracker-app $IMAGE_TAG"
+
+# 4. Security Scan (OWASP ZAP)
+zap_scan:
+  stage: security
+  image: owasp/zap2docker-stable
+  script:
+    # This scans your running EC2 website for vulnerabilities
+    - zap-baseline.py -t http://$EC2_IP_ADDRESS:3000 -r zap_report.html || true
+  artifacts:
+    when: always
+    paths:
+      - zap_report.html
